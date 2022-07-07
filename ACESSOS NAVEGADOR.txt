@@ -1,0 +1,11 @@
+***** SWAGGER [REST-API] *****
+localhost:8090/rest-api/swagger-ui/
+
+***** SWAGGER [PRODUCER] *****
+localhost:8091/producer/swagger-ui/
+
+***** MONGO-EXPRESS *****
+http://localhost:8180/
+
+***** KAFDROP - BROKER LIST KAFKA *****
+http://localhost:9000/

@@ -1,0 +1,22 @@
+server:
+  port: 8090
+  servlet:
+    context-path: /rest-api
+
+spring:
+  application:
+    name: rest-api
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  data:
+    mongodb:
+#      uri: mongodb://root:password@localhost:27017/rest-kafka?authSource=admin
+      uri: mongodb://root:password@mongodb:27017/rest-kafka?authSource=admin
+
+topic:
+  name:
+    users: users
+    cars: cars

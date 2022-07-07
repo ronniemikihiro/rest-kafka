@@ -1,0 +1,44 @@
+server:
+  port: 8091
+  servlet:
+    context-path: /producer
+
+spring:
+  application:
+    name: producer
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  data:
+    mongodb:
+#      uri: mongodb://root:password@localhost:27017/rest-kafka?authSource=admin    #localhost
+      uri: mongodb://root:password@mongodb:27017/rest-kafka?authSource=admin      #docker
+  kafka:
+#    bootstrap-servers: localhost:9092   #localhost
+    bootstrap-servers: kafka:9092       #docker
+    properties:
+      specific:
+        avro:
+          reader: true
+      schema:
+        registry:
+#          url: http://localhost:8081          #localhost
+          url: http://schema-registry:8081    #docker
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+    consumer:
+      group-id: group_id
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
+      enable-auto-commit: false
+    listener:
+      ack-mode: MANUAL_IMMEDIATE
+
+topic:
+  name:
+    users: users
+    cars: cars

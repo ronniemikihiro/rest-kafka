@@ -1,0 +1,222 @@
+version: '3.7'
+
+volumes:
+  mongo-data:
+    driver: local
+
+services:
+
+  mongodb:
+    image: mongo
+    container_name: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    ports:
+      - "27017:27017"
+#    volumes:
+#      - C:/mongodb:/data/db
+    volumes:
+      - mongo-data
+    deploy:
+      resources:
+        limits:
+          cpus: 0.75
+          memory: 1g
+
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-express
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=root
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=password
+    ports:
+      - "8180:8081"
+    restart: on-failure
+    deploy:
+      resources:
+        limits:
+          cpus: 0.75
+          memory: 1g
+    depends_on:
+      - mongodb
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:6.2.4
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    deploy:
+      resources:
+        limits:
+          cpus: 0.75
+          memory: 1g
+
+  kafka:
+    image: confluentinc/cp-kafka:6.2.4
+    hostname: kafka
+    container_name: kafka
+    ports:
+      - "29092:29092"
+      - "9092:9092"
+      - "9101:9101"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT      #localhost
+#      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092    #docker
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_JMX_PORT: 9101
+    deploy:
+      resources:
+        limits:
+          cpus: 0.75
+          memory: 1g
+    depends_on:
+      - zookeeper
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:6.2.4
+    hostname: schema-registry
+    container_name: schema-registry
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: 'zookeeper:2181'
+    deploy:
+      resources:
+        limits:
+          cpus: 0.75
+          memory: 1g
+    depends_on:
+      - zookeeper
+      - kafka
+
+  rest-proxy:
+    image: confluentinc/cp-kafka-rest:6.2.4
+    hostname: rest-proxy
+    container_name: rest-proxy
+    ports:
+      - "8082:8082"
+    environment:
+      KAFKA_REST_HOST_NAME: rest-proxy
+      KAFKA_REST_BOOTSTRAP_SERVERS: 'kafka:29092'
+      KAFKA_REST_LISTENERS: "http://0.0.0.0:8082"
+      KAFKA_REST_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
+    deploy:
+      resources:
+        limits:
+          cpus: 0.5
+          memory: 512m
+    depends_on:
+      - zookeeper
+      - kafka
+      - schema-registry
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop:3.30.0
+    hostname: kafdrop
+    container_name: kafdrop
+    ports:
+      - "9000:9000"
+    environment:
+      KAFKA_BROKERCONNECT: kafka:29092
+    deploy:
+      resources:
+        limits:
+          cpus: 0.5
+          memory: 512m
+    depends_on:
+      - kafka
+
+#  kafka-cluster:
+#    image: landoop/fast-data-dev:2.6
+#    container_name: kafka-cluster
+#    hostname: kafka-cluster
+#    environment:
+#      ADV_HOST: 127.0.0.1
+#      RUNTESTS: 0
+#      FORWARDLOGS: 0
+#      SAMPLEDATA: 0
+#    ports:
+#      - "2181:2181"             # Zookeeper
+#      - "3030:3030"             # Landoop UI
+#      - "8081-8083:8081-8083"   # REST Proxy, Schema Registry, Kafka Connect ports
+#      - "9581-9585:9581-9585"   # JMX Ports
+#      - "9092:9092"             # Kafka Broker
+#    deploy:
+#      resources:
+#        limits:
+#          cpus: 0.75
+#          memory: 1g
+
+  rest-api:
+    build: "./rest-api"
+    image: "rest-api"
+    container_name: rest-api
+    restart: always
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./rest-api:/home/app
+    deploy:
+      resources:
+        limits:
+          cpus: 0.5
+          memory: 512m
+    depends_on:
+      - mongodb
+
+  producer:
+    build: "./producer"
+    image: "producer"
+    container_name: producer
+    restart: always
+    ports:
+      - "8091:8091"
+    volumes:
+      - ./producer:/home/app
+    deploy:
+      resources:
+        limits:
+          cpus: 0.5
+          memory: 512m
+    depends_on:
+      - mongodb
+      - zookeeper
+      - kafka
+      - schema-registry
+
+  consumer:
+    build: "./consumer"
+    image: "consumer"
+    container_name: consumer
+    restart: always
+    ports:
+      - "8092:8092"
+    volumes:
+      - ./consumer:/home/app
+    deploy:
+      resources:
+        limits:
+          cpus: 0.5
+          memory: 512m
+    depends_on:
+      - mongodb
+      - zookeeper
+      - kafka
+      - schema-registry
+
+
+

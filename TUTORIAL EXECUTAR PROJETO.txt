@@ -1,0 +1,47 @@
+*** Executar no DOCKER ***
+
+1 - Abra o arquivo docker-compose.yml
+    * Comente a linha 73 e Descomente a linha 74
+
+2 - Abra o arquivo application.yml do projeto producer e do projeto consumer
+    * Comente as linhas 16, 19 e 27
+    * Descomente as linhas 17, 20 e 28
+
+3 - Execute o comando abaixo na raiz do projeto, onde está o arquivo docker-compose.yml:
+        docker-compose up
+
+-----------------------------------------------------------------------------------
+
+*** Executar no LOCALHOST ***
+
+1 - Abra o arquivo docker-compose.yml
+    * Comente a linha 74 e Descomente a linha 73
+
+2 - Abra o arquivo application.yml do projeto producer e do projeto consumer
+    * Comente as linhas 17, 20 e 28
+    * Descomente as linhas 16, 19 e 27
+
+3 - Comentar no arquivo docker-compose.yml todos os comandos dos projetos "rest-api, producer e consumer" para não subi-los, e executar o comando abaixo:
+    docker-compose up
+
+4 - Executar os microserviços (rest-api, producer, consumer) na IDE que desejar
+
+
+-----------------------------------------------------------------------------------
+
+
+*** TESTES APLICAÇÃO ***
+
+1 - Abra o Mongo-express link ( http://localhost:8180/ )
+    * Crie um Database com nome "rest-kafka"
+
+2 - Abra o Swagger do Producer link ( localhost:8091/producer/swagger-ui/ ) para testar Mensageria com KAFKA
+    * Teste fazendo o POST de um registro Car por exemplo:
+        {
+          "brand": "palio",
+          "name": "fiat"
+        }
+    * Se o registro for enviado com sucesso, aparecerá no console do projeto consumer no Docker.
+
+3 - Abra o Swagger do Rest-Api (CRUD) link ( localhost:8090/rest-api/swagger-ui/ )
+    * Teste fazendo GET, POST, PUT,DELETE

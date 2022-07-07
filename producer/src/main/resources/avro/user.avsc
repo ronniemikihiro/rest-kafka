@@ -1,0 +1,19 @@
+{
+  "type": "record",
+  "name": "UserAvro",
+  "namespace": "br.com.avro",
+  "fields": [
+    {
+      "name": "id",
+      "type": "string"
+    },
+    {
+      "name": "name",
+      "type": "string"
+    },
+    {
+      "name": "age",
+      "type": "int"
+    }
+  ]
+}
